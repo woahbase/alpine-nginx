@@ -1,0 +1,26 @@
+ARG ARCH=frommakefile
+ARG DOCKERSRC=frommakefile
+ARG USERNAME=frommakefile
+#
+FROM ${USERNAME}/${DOCKERSRC}:${ARCH}
+#
+ARG PUID=1001
+ARG PGID=1001
+#
+RUN addgroup -g ${PGID} -S alpine && \
+    adduser -u ${PUID} -G alpine -H -D alpine
+RUN set -xe \
+    && apk add --no-cache --purge -uU \
+    apache2-utils \
+    logrotate \
+    nginx \
+    openssl \
+    && rm -rf /var/cache/apk/* /tmp/*
+# add local files
+COPY root/ /
+# ports
+EXPOSE 80 443
+# volumes
+VOLUME /config/ /storage/
+#
+ENTRYPOINT ["/init"]
