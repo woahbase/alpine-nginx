@@ -36,7 +36,7 @@ docker pull woahbase/alpine-nginx:x86_64
 ---
 
 * Drop privileges to `alpine` whenever configured to. Respects
-  `PUID` / `PGID` and `-u alpine`.
+  `PUID` / `PGID`.
 
 * Binds to both http(80) and https(443). Publish whichever you
   need, or both with automatic SSL bump.
