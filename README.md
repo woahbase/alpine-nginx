@@ -4,7 +4,7 @@
 #### Container for Alpine Linux + S6 + NGINX
 ---
 
-This [image][233] serves as a standalong web/reverse proxy server,
+This [image][233] serves as a standalone web/reverse proxy server,
 or as the base image for applications / services that use or
 require [NGINX][135].
 
