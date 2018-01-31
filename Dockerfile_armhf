@@ -7,9 +7,9 @@ FROM ${USERNAME}/${DOCKERSRC}:${ARCH}
 ARG PUID=1001
 ARG PGID=1001
 #
-RUN addgroup -g ${PGID} -S alpine && \
-    adduser -u ${PUID} -G alpine -H -D alpine
 RUN set -xe \
+    && addgroup -g ${PGID} -S alpine \
+    && adduser -u ${PUID} -G alpine -H -D alpine \
     && apk add --no-cache --purge -uU \
     apache2-utils \
     logrotate \
