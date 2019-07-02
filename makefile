@@ -51,7 +51,7 @@ OTHERFLAGS := -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro# -
 PORTFLAGS  := -p 80:80 -p 443:443# --net=host # so other local containers can find it without explicit linking, needs firewall cleared
 
 RUNFLAGS   := -e PGID=$(PGID) -e PUID=$(PUID) \
-	-c 64 -m 64m \
+	-c 64 -m 128m \
 	-e WEBADMIN=admin -e PASSWORD=insecurebydefault \
 	-e SSLSUBJECT="/C=US/ST=NY/L=EXAMPLE/O=EXAMPLE/OU=WOAHBase/CN=somewhere.com/emailAddress=everybodycanseethis@mailinator.com"
 

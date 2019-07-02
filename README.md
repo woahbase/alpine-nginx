@@ -1,4 +1,4 @@
-[![build status][251]][232] [![commit][255]][231] [![version:x86_64][256]][235] [![size:x86_64][257]][235] [![version:armhf][258]][236] [![size:armhf][259]][236]
+[![build status][251]][232] [![commit][255]][231] [![version:x86_64][256]][235] [![size:x86_64][257]][235] [![version:armhf][258]][236] [![size:armhf][259]][236] [![version:armv7l][260]][237] [![size:armv7l][261]][237] [![version:aarch64][262]][238] [![size:aarch64][263]][238]
 
 ## [Alpine-NGINX][234]
 #### Container for Alpine Linux + S6 + NGINX
@@ -13,6 +13,8 @@ the [s6][133] init system [overlayed][134] in it.
 
 The image is tagged respectively for the following architectures,
 * **armhf**
+* **armv7l**
+* **aarch64**
 * **x86_64** (retagged as the `latest` )
 
 **armhf** builds have embedded binfmt_misc support and contain the
@@ -96,6 +98,26 @@ docker run --rm -it \
   woahbase/alpine-nginx:x86_64
 ```
 
+Running `make shell` gets a shell inside the running container,
+but does not run the init system, so that it can be done manually.
+
+```
+# make shell
+docker run --rm -it \
+  --name docker_nginx --hostname nginx \
+  -e PGID=1000 -e PUID=1000 \
+  -e WEBADMIN=admin
+  -e PASSWORD=insecurebydefault \
+  -c 64 -m 64m \
+  -p 80:80 -p 443:443 \
+  -v config:/config  \
+  -v config/storage:/storage:ro
+  -v /etc/hosts:/etc/hosts:ro
+  -v /etc/localtime:/etc/localtime:ro
+  --entrypoint /bin/bash \
+  woahbase/alpine-nginx:x86_64
+```
+
 Stop the container with a timeout, (defaults to 2 seconds)
 
 ```
@@ -125,14 +147,14 @@ docker restart docker_nginx
 Get a shell inside a already running container,
 
 ```
-# make shell
+# make debug
 docker exec -it docker_nginx /bin/bash
 ```
 
 set user or login as root,
 
 ```
-# make rshell
+# make rdebug
 docker exec -u root -it docker_nginx /bin/bash
 ```
 
@@ -182,11 +204,9 @@ for other architectures.]
 docker build --rm --compress --force-rm \
   --no-cache=true --pull \
   -f ./Dockerfile_x86_64 \
-  --build-arg ARCH=x86_64 \
-  --build-arg DOCKERSRC=alpine-s6 \
+  --build-arg DOCKERSRC=woahbase/alpine-s6:x86_64 \
   --build-arg PGID=1000 \
   --build-arg PUID=1000 \
-  --build-arg USERNAME=woahbase \
   -t woahbase/alpine-nginx:x86_64 \
   .
 ```
@@ -244,6 +264,8 @@ Maintained by [WOAHBase][204].
 [234]: https://woahbase.online/#/images/alpine-nginx
 [235]: https://microbadger.com/images/woahbase/alpine-nginx:x86_64
 [236]: https://microbadger.com/images/woahbase/alpine-nginx:armhf
+[237]: https://microbadger.com/images/woahbase/alpine-nginx:armv7l
+[238]: https://microbadger.com/images/woahbase/alpine-nginx:aarch64
 
 [251]: https://travis-ci.org/woahbase/alpine-nginx.svg?branch=master
 
@@ -254,3 +276,9 @@ Maintained by [WOAHBase][204].
 
 [258]: https://images.microbadger.com/badges/version/woahbase/alpine-nginx:armhf.svg
 [259]: https://images.microbadger.com/badges/image/woahbase/alpine-nginx:armhf.svg
+
+[260]: https://images.microbadger.com/badges/version/woahbase/alpine-nginx:armv7l.svg
+[261]: https://images.microbadger.com/badges/image/woahbase/alpine-nginx:armv7l.svg
+
+[262]: https://images.microbadger.com/badges/version/woahbase/alpine-nginx:aarch64.svg
+[263]: https://images.microbadger.com/badges/image/woahbase/alpine-nginx:aarch64.svg
