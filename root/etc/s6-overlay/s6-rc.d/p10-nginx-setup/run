@@ -1,0 +1,80 @@
+#!/usr/bin/with-contenv bash
+set -e
+
+echo 'fastcgi_param  SCRIPT_FILENAME $document_root$fastcgi_script_name;' >> /etc/nginx/fastcgi_params
+
+# remove default confs
+# rm -f /etc/nginx/conf.d/default.conf
+# rm -f /etc/nginx/http.d/default.conf
+
+ROOTDIR="${ROOTDIR:-/config}";
+KEYDIR="${KEYDIR:-$ROOTDIR/keys}";
+PKEYFILE="${PKEYFILE:-$KEYDIR/private.key}";
+CERTFILE="${CERTFILE:-$KEYDIR/certificate.crt}";
+HTPASSWDFILE="${HTPASSWDFILE:-$KEYDIR/.htpasswd}";
+NGINXDIR="${NGINXDIR:-$ROOTDIR/nginx}";
+CONFSDIR="${CONFSDIR:-$NGINXDIR/conf.d}";
+SITESDIR="${SITESDIR:-$NGINXDIR/http.d}";
+STREAMSDIR="${STREAMSDIR:-$NGINXDIR/stream.d}";
+WEBDIR="${WEBDIR:-$ROOTDIR/www}";
+
+# make our folders
+mkdir -p \
+    $KEYDIR \
+    $CONFSDIR \
+    $SITESDIR \
+    $STREAMSDIR \
+    $WEBDIR \
+    /var/lib/nginx/tmp/client_body \
+    /var/tmp/nginx;
+
+# function to substitute paths in config files
+_subst () {
+    sed \
+    -e "s|S6_USER|$S6_USER|g" \
+    -e "s|NGINXDIR|$NGINXDIR|g" \
+    -e "s|CONFSDIR|$CONFSDIR|g" \
+    -e "s|SITESDIR|$SITESDIR|g" \
+    -e "s|STREAMSDIR|$STREAMSDIR|g" \
+    -e "s|WEBDIR|$WEBDIR|g" \
+    -e "s|HTPASSWDFILE|$HTPASSWDFILE|g" \
+    -e "s|CERTFILE|$CERTFILE|g" \
+    -e "s|PKEYFILE|$PKEYFILE|g" \
+    $1 > $2;
+}
+
+# copy config files
+if [ ! -f "$NGINXDIR/nginx.conf" ];
+then
+    _subst /defaults/nginx.conf $NGINXDIR/nginx.conf;
+fi;
+
+# provide default site-confs if none exist, as a starting point
+if [ $(find $SITESDIR -type f | wc -l) -eq 0 ];
+then
+    if [ -z "${NGINX_NO_HTTP}" ]; # set to 'true' if http not needed
+    then
+        _subst /defaults/default_http $SITESDIR/http;
+    fi;
+    if [ -z "${NGINX_NO_HTTPS}" ]; # set to 'true' if https not needed
+    then
+        _subst /defaults/default_https $SITESDIR/https;
+    fi;
+fi;
+
+# provide an index file if none exist
+[[ $(find $WEBDIR -type f | wc -l) -eq 0 ]] && \
+    cp /defaults/index.html $WEBDIR/index.html;
+
+# fix permissions
+chown \
+    ${S6_USER:-alpine}:${S6_USER:-alpine} \
+    $ROOTDIR \
+    $KEYDIR \
+    $WEBDIR;
+
+chown -R \
+    ${S6_USER:-alpine}:${S6_USER:-alpine} \
+    $NGINXDIR \
+    /var/lib/nginx \
+    /var/tmp/nginx;

@@ -1,0 +1,46 @@
+#!/usr/bin/with-contenv bash
+set -e
+
+ROOTDIR="${ROOTDIR:-/config}";
+KEYDIR="${KEYDIR:-$ROOTDIR/keys}";
+PKEYFILE="${PKEYFILE:-$KEYDIR/private.key}";
+CERTFILE="${CERTFILE:-$KEYDIR/certificate.crt}";
+DEFAULTSUBJECT="/C=US/ST=NY/L=EXAMPLE/O=EXAMPLE/OU=EXAMPLE/CN=*/emailAddress=me@example.com"
+SSLSUBJECT=${SSLSUBJECT:-$DEFAULTSUBJECT};
+
+if [ -z "${NGINX_NO_HTTPS}" ]; # i.e. no need for certificate
+then
+    if [ -n "${NGINX_NO_CERTGEN}" ]; # set to 'true' to skip generating certs
+    then
+        echo "Not generating certfile/key.";
+    elif [ -f "${PKEYFILE}" ] && [ -f "${CERTFILE}" ];
+    then
+        echo "Using cert found in ${CERTFILE}";
+        echo "Using key  found in ${PKEYFILE}";
+        echo "Make sure nginx configurations have the same path as these.";
+    else
+        echo "Generating self-signed cert/key in";
+        echo "${CERTFILE} / ${PKEYFILE}";
+        echo "You may want to replace these with your own.";
+        openssl req -newkey rsa:4096 -x509 -days 3650 -nodes -out "${CERTFILE}" -keyout "${PKEYFILE}" -subj "$SSLSUBJECT";
+    fi;
+fi;
+
+HTPASSWDFILE="${HTPASSWDFILE:-$KEYDIR/.htpasswd}";
+ADMIN=${WEBADMIN:-admin};
+PASSWORD=${PASSWORD:-insecurebydefault};
+
+if [ -z "${NGINX_NO_HTPASSWD}" ]; # i.e. no need for htpasswd
+then
+    if [ -f "${HTPASSWDFILE}" ];
+    then
+        echo "Using .htpasswd found in ${HTPASSWDFILE}";
+    else
+        echo "Generating ${HTPASSWDFILE}";
+        echo "Adding credentials for ${ADMIN}";
+        htpasswd -bcB "${HTPASSWDFILE}" "${ADMIN}" "${PASSWORD}";
+    fi;
+else
+    echo "Not generating .httpasswd";
+fi;
+
