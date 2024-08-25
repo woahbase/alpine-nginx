@@ -1,6 +1,8 @@
 #!/usr/bin/with-contenv bash
 set -e
 
+vecho () { if [ "${S6_VERBOSITY:-1}" -gt 0 ]; then echo "[$0] $@"; fi; }
+
 ROOTDIR="${ROOTDIR:-/config}";
 KEYDIR="${KEYDIR:-$ROOTDIR/keys}";
 PKEYFILE="${PKEYFILE:-$KEYDIR/private.key}";
@@ -12,18 +14,20 @@ if [ -z "${NGINX_NO_HTTPS}" ]; # i.e. no need for certificate
 then
     if [ -n "${NGINX_NO_CERTGEN}" ]; # set to 'true' to skip generating certs
     then
-        echo "Not generating certfile/key.";
+        vecho "Not generating certfile/key.";
     elif [ -f "${PKEYFILE}" ] && [ -f "${CERTFILE}" ];
     then
-        echo "Using cert found in ${CERTFILE}";
-        echo "Using key  found in ${PKEYFILE}";
-        echo "Make sure nginx configurations have the same path as these.";
+        vecho "Using cert found in ${CERTFILE}";
+        vecho "Using key  found in ${PKEYFILE}";
+        vecho "Make sure nginx configurations have the same path as these.";
     else
-        echo "Generating self-signed cert/key in";
-        echo "${CERTFILE} / ${PKEYFILE}";
-        echo "You may want to replace these with your own.";
+        vecho "Generating self-signed cert/key in";
+        vecho "${CERTFILE} / ${PKEYFILE}";
+        vecho "You may want to replace these with your own.";
         openssl req -newkey rsa:4096 -x509 -days 3650 -nodes -out "${CERTFILE}" -keyout "${PKEYFILE}" -subj "$SSLSUBJECT";
     fi;
+# else
+#     vecho "Not generating certificates";
 fi;
 
 HTPASSWDFILE="${HTPASSWDFILE:-$KEYDIR/.htpasswd}";
@@ -34,13 +38,13 @@ if [ -z "${NGINX_NO_HTPASSWD}" ]; # i.e. no need for htpasswd
 then
     if [ -f "${HTPASSWDFILE}" ];
     then
-        echo "Using .htpasswd found in ${HTPASSWDFILE}";
+        vecho "Using .htpasswd found in ${HTPASSWDFILE}";
     else
-        echo "Generating ${HTPASSWDFILE}";
-        echo "Adding credentials for ${ADMIN}";
+        vecho "Generating ${HTPASSWDFILE}";
+        vecho "Adding credentials for ${ADMIN}";
         htpasswd -bcB "${HTPASSWDFILE}" "${ADMIN}" "${PASSWORD}";
     fi;
-else
-    echo "Not generating .httpasswd";
+# else
+#     vecho "Not generating .htpasswd";
 fi;
 

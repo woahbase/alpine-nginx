@@ -3,10 +3,32 @@ set -e
 
 # replace this file with custom postinstall script on child images
 
+vecho () { if [ "${S6_VERBOSITY:-1}" -gt 0 ]; then echo "[$0] $@"; fi; }
+
 ROOTDIR="${ROOTDIR:-/config}";
 WEBDIR="${WEBDIR:-$ROOTDIR/www}"
 
+# make our folders
+vecho "Ensure webroot directory exist: $WEBDIR";
+mkdir -p \
+    $WEBDIR \
+    ;
+
+# provide an index file if none exist
+if [ -n "${NGINX_ADD_DEFAULT_INDEX}" ] \
+&& [ $(find $WEBDIR -type f | wc -l) -eq 0 ];
+then
+    vecho "$WEBDIR has no default webpage available.";
+    vecho "Copying a placeholder from /defaults/index.html.";
+    cp /defaults/index.html $WEBDIR/index.html;
+fi;
+
 # fix permissions
-chown \
-    ${S6_USER:-alpine}:${S6_USER:-alpine} \
-    $WEBDIR
+if [ -n "${NGINX_PERMFIX_WEBDIR}" ]; # may become cumbersome if WEBDIR has large number of files
+then
+    vecho "Fixing permissions on $WEBDIR files.";
+    chown -R \
+        ${S6_USER:-alpine}:${S6_USER:-alpine} \
+        $WEBDIR \
+        ;
+fi;

@@ -1,7 +1,7 @@
 #!/usr/bin/with-contenv bash
 set -e
 
-echo 'fastcgi_param  SCRIPT_FILENAME $document_root$fastcgi_script_name;' >> /etc/nginx/fastcgi_params
+vecho () { if [ "${S6_VERBOSITY:-1}" -gt 0 ]; then echo "[$0] $@"; fi; }
 
 # remove default confs
 # rm -f /etc/nginx/conf.d/default.conf
@@ -19,6 +19,7 @@ STREAMSDIR="${STREAMSDIR:-$NGINXDIR/stream.d}";
 WEBDIR="${WEBDIR:-$ROOTDIR/www}";
 
 # make our folders
+vecho "Ensure configuration directories exist.";
 mkdir -p \
     $KEYDIR \
     $CONFSDIR \
@@ -46,27 +47,34 @@ _subst () {
 # copy config files
 if [ ! -f "$NGINXDIR/nginx.conf" ];
 then
+    vecho "Setting up /defaults/nginx.conf as $NGINXDIR/nginx.conf";
     _subst /defaults/nginx.conf $NGINXDIR/nginx.conf;
 fi;
 
 # provide default site-confs if none exist, as a starting point
 if [ $(find $SITESDIR -type f | wc -l) -eq 0 ];
 then
+    vecho "$SITESDIR has no default site configured.";
     if [ -z "${NGINX_NO_HTTP}" ]; # set to 'true' if http not needed
     then
+        vecho "Setting up /defaults/default_http as $SITESDIR/http";
         _subst /defaults/default_http $SITESDIR/http;
     fi;
     if [ -z "${NGINX_NO_HTTPS}" ]; # set to 'true' if https not needed
     then
+        vecho "Setting up /defaults/default_https as $SITESDIR/https";
         _subst /defaults/default_https $SITESDIR/https;
     fi;
 fi;
 
-# provide an index file if none exist
-[[ $(find $WEBDIR -type f | wc -l) -eq 0 ]] && \
-    cp /defaults/index.html $WEBDIR/index.html;
+if [ -z "${NGINX_SKIP_FASTCGI_PARAM}" ];
+then
+    vecho "Adding fastcgi_param configuration in /etc/nginx/fastcgi_params";
+    echo 'fastcgi_param  SCRIPT_FILENAME $document_root$fastcgi_script_name;' >> /etc/nginx/fastcgi_params;
+fi;
 
 # fix permissions
+vecho "Fixing permissions.";
 chown \
     ${S6_USER:-alpine}:${S6_USER:-alpine} \
     $ROOTDIR \
