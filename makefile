@@ -103,7 +103,7 @@ OTHERFLAGS := \
 	# -e NGINX_NO_HTPASSWD=true \
 	# -e NGINX_NO_HTTP=true \
 	# -e NGINX_NO_HTTPS=true \
-	# -e SSLSUBJECT="/C=US/ST=NY/L=EXAMPLE/O=EXAMPLE/OU=WOAHBase/CN=somewhere.com/emailAddress=everybodycanseethis@mailinator.com" \
+	# -e SSLSUBJECT="/C=US/ST=NY/L=EXAMPLE/O=EXAMPLE/OU=EXAMPLE/CN=*/emailAddress=me@example.com" \
 	# -e TZ=Asia/Kolkata \
 	# -e WEBADMIN=admin \
 	# -e PASSWORD=insecurebydefault \

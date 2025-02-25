@@ -20,15 +20,16 @@ if [ -n "${NGINX_ADD_DEFAULT_INDEX}" ] \
 then
     vecho "$WEBDIR has no default webpage available.";
     vecho "Copying a placeholder from /defaults/index.html.";
-    cp /defaults/index.html $WEBDIR/index.html;
+    cp -p /defaults/index.html $WEBDIR/index.html;
 fi;
 
 # fix permissions
 if [ -n "${NGINX_PERMFIX_WEBDIR}" ]; # may become cumbersome if WEBDIR has large number of files
 then
     vecho "Fixing permissions on $WEBDIR files.";
-    chown -R \
-        ${S6_USER:-alpine}:${S6_USER:-alpine} \
-        $WEBDIR \
-        ;
+    find $WEBDIR \
+        \! -user ${S6_USER:-alpine} -exec \
+        chown --no-dereference \
+        ${S6_USER:-alpine}:${PGID:-1000} \
+        '{}' +;
 fi;
